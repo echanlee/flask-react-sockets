@@ -1,5 +1,5 @@
 from flask import Flask, session, request;
-from flask_socketio import SocketIO, send, join_room, leave_room, emit, rooms
+from flask_socketio import SocketIO, send, join_room, leave_room, emit
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'mysecret'
@@ -20,17 +20,25 @@ restaurants = {}
 def on_Connect():
     join_room('Room 0')
     print(request.sid + " connECTED")
+    room_clients['Room 0'] += 1
     return None
 
 @socketIo.on('removeMe')
 def test_yeet(currentRoom):
     print('Client disconnected from '+currentRoom)
+    room_clients[currentRoom] -= 1
+    print(room_clients)
+    return None
 
 
 @socketIo.on('join')
-def on_join(room):
-    join_room(room)
-    print('entered room: '+ room)
+def on_join(rooms):
+    join_room(rooms['room'])
+    print(room_clients)
+    room_clients[rooms['room']] += 1
+    room_clients[rooms['currentRoom']] -= 1
+    print(room_clients)
+    print('entered room: '+ rooms['room'] + ' and left '+ rooms['currentRoom']+ ' count of current room '+room_clients[rooms['room']] )
     return None
 
 @socketIo.on("message")
@@ -41,16 +49,9 @@ def handleMessage(msg):
 
 @socketIo.on("countRoom")
 def countRoom(currentRoom):
-    print(socketIo.rooms['/'][currentRoom])
-    # emit('countRoom', room.length, room = currentRoom)
+    send(room_clients[currentRoom], room = currentRoom)
     return None
 
-# @socketIo.on('leave')
-# def on_leave(data):
-#     username = data['username']
-#     room = data['room']
-#     leave_room(room)
-#     send(username + ' has left the room.', room=room)
 
 @socketIo.on("message")
 def handleMessage(msg):
@@ -65,6 +66,26 @@ def handleMessage(data):
     print(data['message']+"    "+data['room'])
     send(msg, room=room)
     return None
+
+@socketIo.on('restaurant')
+def addRestaurant(data):
+    room = data['room']
+    msg = data['msg']
+    if room in restaurants:
+        if msg in restaurants[room]:
+            restaurants[room][msg] += 1
+        else:
+            restaurants[room][msg] = 1
+    else:
+        restaurants[room] = {}
+        restaurants[room][msg] =1
+    
+    print (restaurants[room][msg])
+    print( room_clients[room])
+    print(restaurants)
+    if restaurants[room][msg] >= room_clients[room]:
+        print('heyo')
+        emit('match', msg, room=room)
 
 
 if __name__ == '__main__':

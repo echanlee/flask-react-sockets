@@ -8,34 +8,24 @@ const App = () => {
   const [messages, setMessages] = useState(["Hello And Welcome"]);
   const [message, setMessage] = useState("");
   const [currentRoom, setRoom] = useState("Room 0");
+  const [matched, setMatched] = useState("");
+  console.log(matched);
 
   useEffect(() => {
-    console.log(currentRoom)
     getMessages();
   }, [messages.length]);
 
-
-  window.addEventListener('beforeunload', function (e) {
-    // Cancel the event
-    e.preventDefault(); // If you prevent default behavior in Mozilla Firefox prompt will always be shown
-    // Chrome requires returnValue to be set
-    e.returnValue = 'heyo';
+  useEffect(() => {
+    match();
   });
 
+  useEffect(() => {
+    document.title = `YOU ARE IN ROOM ${currentRoom}`;
+  });
 
-  // useEffect(() => {
-  //   const cleanup = () => {
-  //     alert("hello world");
-  //     socket.emit('removeMe', currentRoom);
-  //     socket.emit("message", "kill me");
-  //   }
-  
-  //   window.addEventListener('beforeunload', cleanup);
-  
-  //   return () => {
-  //     window.removeEventListener('beforeunload', cleanup);
-  //   }
-  // }, []);
+  window.onbeforeunload = function (e) {
+    socket.emit('removeMe', currentRoom);
+};
 
   const getMessages = () => {
     socket.on("message", msg => {
@@ -51,7 +41,6 @@ const App = () => {
 
   // On Click
   const onClick = () => {
-    console.log(window);
     if (message !== "") {
       socket.emit("message", message);
       setMessage("");
@@ -59,7 +48,6 @@ const App = () => {
       alert("Please Add A Message");
     }
   };
-
 
   const onClickRoom = () => {
     if (message !== "") {
@@ -74,9 +62,12 @@ const App = () => {
   };
 
   const changeRoom = (e) => {
-    var room = e.target.value
-    setRoom(room)
-    socket.emit('join', room);
+    var room = e.target.value;
+    socket.emit('join', {
+      room: room,
+      currentRoom: currentRoom
+    });
+    setRoom(room);
   }
 
   const count = () => {
@@ -84,22 +75,30 @@ const App = () => {
     socket.emit('countRoom', currentRoom);
   }
 
-  const getCount = () => {
-    socket.on('countRoom', (count) => {
-      console.log('count is'+count);
-    });
+  const addrestaurant = () => {
+    if (message !== "") {
+      socket.emit("restaurant", {
+        room: currentRoom,
+        msg: message
+      });
+      setMessage("");
+    } else {
+      alert("Please Add A Message");
+    }
   }
 
-  const disconnect = () => {
-    socket.on('disconnect', () =>{
-      socket.emit('disconnect', currentRoom);
+  const match = () => {
+    socket.on('match', msg => {
+      setMatched(msg);
+      debugger;
     });
   }
 
   return (
     <div>
-      <button value = 'room 1' onClick={e => changeRoom(e)}>Room 1</button>
-      <button value = 'room 2' onClick={e => changeRoom(e)}>Room 2</button>
+      <p>YOU ARE IN ROOM {currentRoom}</p>
+      <button value = 'Room 1' onClick={e => changeRoom(e)}>Room 1</button>
+      <button value = 'Room 2' onClick={e => changeRoom(e)}>Room 2</button>
       {messages.length > 0 &&
         messages.map(msg => (
           <div>
@@ -109,7 +108,11 @@ const App = () => {
       <input value={message} name="message" onChange={e => onChange(e)} />
       <button onClick={() => onClick()}>Send Message</button> <br></br>
       <button onClick={() => onClickRoom()}>Send Message to room</button> <br></br>
-      <button onClick={() => count()}>Count</button>
+      <button onClick={() => count()}>Count</button><br></br><br></br>
+      <button onClick={() => addrestaurant()}>Add to Room</button>
+      {match.length > 0 &&
+        <p>You have been matched with {matched}</p>
+      }
     </div>
   );
 };
