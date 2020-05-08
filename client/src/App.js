@@ -17,7 +17,8 @@ const App = () => {
 
   useEffect(() => {
     match();
-  });
+    console.log(matched);
+  }, [matched.length]);
 
   useEffect(() => {
     document.title = `YOU ARE IN ROOM ${currentRoom}`;
@@ -110,7 +111,7 @@ const App = () => {
       <button onClick={() => onClickRoom()}>Send Message to room</button> <br></br>
       <button onClick={() => count()}>Count</button><br></br><br></br>
       <button onClick={() => addrestaurant()}>Add to Room</button>
-      {match.length > 0 &&
+      {matched.length > 0 &&
         <p>You have been matched with {matched}</p>
       }
     </div>

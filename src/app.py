@@ -80,9 +80,6 @@ def addRestaurant(data):
         restaurants[room] = {}
         restaurants[room][msg] =1
     
-    print (restaurants[room][msg])
-    print( room_clients[room])
-    print(restaurants)
     if restaurants[room][msg] >= room_clients[room]:
         print('heyo')
         emit('match', msg, room=room)
