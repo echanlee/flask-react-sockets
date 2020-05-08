@@ -9,7 +9,6 @@ const App = () => {
   const [message, setMessage] = useState("");
   const [currentRoom, setRoom] = useState("Room 0");
   const [matched, setMatched] = useState("");
-  console.log(matched);
 
   useEffect(() => {
     getMessages();
@@ -17,7 +16,6 @@ const App = () => {
 
   useEffect(() => {
     match();
-    console.log(matched);
   }, [matched.length]);
 
   useEffect(() => {
@@ -72,7 +70,6 @@ const App = () => {
   }
 
   const count = () => {
-    console.log('count');
     socket.emit('countRoom', currentRoom);
   }
 
